@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "10180692151",
+    "project_id": "kwikwinotes",
+    "storage_bucket": "kwikwinotes.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:10180692151:android:4cefeea8266cfce0a2a532",
+        "android_client_info": {
+          "package_name": "com.example.kwikwinotes"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDGLTjVYAbyacgVarXekWgWWtRqT4babko"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
