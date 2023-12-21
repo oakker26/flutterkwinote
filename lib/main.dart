@@ -4,9 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:kwikwinotes/firebase_options.dart';
 import 'package:kwikwinotes/views/login_view.dart';
 import 'package:kwikwinotes/views/register_view.dart';
+import 'package:kwikwinotes/views/verify_email_view.dart';
+import 'dart:developer' as devtools show log;
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // await Firebase.initializeApp();
+
   runApp(MaterialApp(
     title: 'Flutter Demo',
     theme: ThemeData(
@@ -14,6 +18,11 @@ void main() {
       useMaterial3: true,
     ),
     home: const HomeScreen(),
+    routes: {
+      '/login/': (context) => const LoginView(),
+      '/register/': (context) => const RegisterView()
+    },
+    // initialRoute: "/login/",
   ));
 }
 
@@ -22,79 +31,102 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Kwi Home Screen"),
-        backgroundColor: Colors.red,
+    return FutureBuilder(
+      future: Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
       ),
-      body: FutureBuilder(
-        future: Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        ),
-        builder: (context, snapshot) {
-          switch (snapshot.connectionState) {
-            case ConnectionState.done:
-              final user = FirebaseAuth.instance.currentUser;
-              final emailVerified = user?.emailVerified ?? false;
-              if (emailVerified) {
-                print('you are a verified user');
+      builder: (context, snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.done:
+            final user = FirebaseAuth.instance.currentUser;
+            // final emailVerified = user?.emailVerified ?? false;
+            if (user != null) {
+              if (!user.emailVerified) {
+                print("kwikwi");
+                return const NotesView();
+
+                // return Text('');
               } else {
-                print('you need to verify your email first');
+                print(user.email);
+                print(user);
+                return const VerifyEmailView();
               }
-              return Text("Done");
-            default:
-              return const Text("loading");
-          }
-        },
-      ),
+            } else {
+              return const LoginView();
+            }
+          default:
+            return const CircularProgressIndicator();
+        }
+      },
     );
   }
 }
 
-// class MyHomePage extends StatefulWidget {
-//   const MyHomePage({super.key, required this.title});
+enum MenuAction { logout }
 
-//   final String title;
+class NotesView extends StatefulWidget {
+  const NotesView({super.key});
 
-//   @override
-//   State<MyHomePage> createState() => _MyHomePageState();
-// }
+  @override
+  State<NotesView> createState() => _NotesViewState();
+}
 
-// class _MyHomePageState extends State<MyHomePage> {
-//   int _counter = 0;
+class _NotesViewState extends State<NotesView> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Kwi Notes"),
+        backgroundColor: Colors.red,
+        actions: [
+          PopupMenuButton<MenuAction>(
+            onSelected: (value) async {
+              // devtools.log(value.toString());
+              switch (value) {
+                case MenuAction.logout:
+                  final shouldLogout = await showLogOutDialog(context);
+                  devtools.log(shouldLogout.toString());
+                  if (shouldLogout) {
+                    await FirebaseAuth.instance.signOut();
+                    // ignore: use_build_context_synchronously
+                    Navigator.of(context)
+                        .pushNamedAndRemoveUntil('/login/', (_) => false);
+                  }
+              }
+            },
+            itemBuilder: (context) {
+              return const [
+                PopupMenuItem<MenuAction>(
+                    value: MenuAction.logout, child: Text("LogOut")),
+              ];
+            },
+          )
+        ],
+      ),
+      body: const Text("KwiKwi Hello"),
+    );
+  }
+}
 
-//   void _incrementCounter() {
-//     setState(() {
-//       _counter++;
-//     });
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-//         title: Text(widget.title),
-//       ),
-//       body: Center(
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.center,
-//           children: <Widget>[
-//             const Text(
-//               'You have pushed the button this many times:',
-//             ),
-//             Text(
-//               '$_counter',
-//               style: Theme.of(context).textTheme.headlineMedium,
-//             ),
-//           ],
-//         ),
-//       ),
-//       floatingActionButton: FloatingActionButton(
-//         onPressed: _incrementCounter,
-//         tooltip: 'Increment',
-//         child: const Icon(Icons.add),
-//       ),
-//     );
-//   }
-// }
+Future<bool> showLogOutDialog(BuildContext context) {
+  return showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Sign Out"),
+          content: const Text("are you sure to SignOut"),
+          actions: [
+            TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+                child: const Text("NO")),
+            TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                },
+                child: const Text("Sure")),
+          ],
+        );
+      }).then((value) => value ?? false);
+}

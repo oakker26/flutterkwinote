@@ -1,7 +1,5 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:kwikwinotes/firebase_options.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -32,63 +30,56 @@ class _LoginViewState extends State<LoginView> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Kwi Login"),
+        titleTextStyle: const TextStyle(color: Colors.white, fontSize: 24),
         backgroundColor: Colors.red,
       ),
-      body: FutureBuilder(
-        future: Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        ),
-        builder: (context, snapshot) {
-          switch (snapshot.connectionState) {
-            case ConnectionState.done:
-              return Column(
-                children: [
-                  TextField(
-                    controller: _email,
-                    keyboardType: TextInputType.emailAddress,
-                    autocorrect: false,
-                    decoration: const InputDecoration(hintText: "Enter Email"),
-                  ),
-                  TextField(
-                    controller: _password,
-                    decoration:
-                        const InputDecoration(hintText: "Enter Password"),
-                    obscureText: true,
-                    enableSuggestions: false,
-                    autocorrect: false,
-                  ),
-                  TextButton(
-                      onPressed: () async {
-                        final email = _email.text;
-                        final password = _password.text;
-                        try {
-                          final userCredential = await FirebaseAuth.instance
-                              .signInWithEmailAndPassword(
-                                  email: email, password: password);
-                          print(userCredential);
-                        } on FirebaseAuthException catch (e) {
-                          if (e.code == "invalid-credential") {
-                            print(
-                                "your email or password something is wrong...");
-                          } else {
-                            print("your login success");
-                          }
-                          // if (e.code == "invalid-credential") {
-                          //   print("user not found");
-                          // } else {
-                          //   print(e.code);
-                          //   print('something happen');
-                          //   print(e.code);
-                          // }
-                        }
-                      },
-                      child: const Text("Kwi Login")),
-                ],
-              );
-            default:
-              return const Text("loading");
-          }
-        },
+      body: Column(
+        children: [
+          TextField(
+            controller: _email,
+            keyboardType: TextInputType.emailAddress,
+            autocorrect: false,
+            decoration: const InputDecoration(hintText: "Enter Email"),
+          ),
+          TextField(
+            controller: _password,
+            decoration: const InputDecoration(hintText: "Enter Password"),
+            obscureText: true,
+            enableSuggestions: false,
+            autocorrect: false,
+          ),
+          TextButton(
+              onPressed: () async {
+                final email = _email.text;
+                final password = _password.text;
+                try {
+                  final userCredential = await FirebaseAuth.instance
+                      .signInWithEmailAndPassword(
+                          email: email, password: password);
+                  print(userCredential);
+                } on FirebaseAuthException catch (e) {
+                  if (e.code == "invalid-credential") {
+                    print("your email or password something is wrong...");
+                  } else {
+                    print("your login success");
+                  }
+                  // if (e.code == "invalid-credential") {
+                  //   print("user not found");
+                  // } else {
+                  //   print(e.code);
+                  //   print('something happen');
+                  //   print(e.code);
+                  // }
+                }
+              },
+              child: const Text("Kwi Login")),
+          TextButton(
+              onPressed: () {
+                Navigator.of(context)
+                    .pushNamedAndRemoveUntil('/register/', (route) => false);
+              },
+              child: const Text('Not registered yet? Register here!'))
+        ],
       ),
     );
   }
