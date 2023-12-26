@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:kwikwinotes/constant/routes.dart';
 import 'package:kwikwinotes/firebase_options.dart';
 import 'package:kwikwinotes/views/login_view.dart';
 import 'package:kwikwinotes/views/register_view.dart';
@@ -19,8 +20,10 @@ void main() async {
     ),
     home: const HomeScreen(),
     routes: {
-      '/login/': (context) => const LoginView(),
-      '/register/': (context) => const RegisterView()
+      loginRoute: (context) => const LoginView(),
+      registerRoute: (context) => const RegisterView(),
+      notesRoute: (context) => const NotesView(),
+      verifyEmailRoute: (context) => const VerifyEmailView(),
     },
     // initialRoute: "/login/",
   ));
@@ -41,7 +44,7 @@ class HomeScreen extends StatelessWidget {
             final user = FirebaseAuth.instance.currentUser;
             // final emailVerified = user?.emailVerified ?? false;
             if (user != null) {
-              if (!user.emailVerified) {
+              if (user.emailVerified) {
                 print("kwikwi");
                 return const NotesView();
 
@@ -90,7 +93,7 @@ class _NotesViewState extends State<NotesView> {
                     await FirebaseAuth.instance.signOut();
                     // ignore: use_build_context_synchronously
                     Navigator.of(context)
-                        .pushNamedAndRemoveUntil('/login/', (_) => false);
+                        .pushNamedAndRemoveUntil(loginRoute, (_) => false);
                   }
               }
             },
