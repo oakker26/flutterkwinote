@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import "dart:developer" as devtools show log;
+// import 'package:firebase_auth/firebase_auth.dart';
+// import "dart:developer" as devtools show log;
 
 import 'package:kwikwinotes/constant/routes.dart';
+import 'package:kwikwinotes/services/auth/auth_exception.dart';
+import 'package:kwikwinotes/services/auth/auth_service.dart';
 import 'package:kwikwinotes/utils/show_error_dialog.dart';
 
 class LoginView extends StatefulWidget {
@@ -57,12 +59,12 @@ class _LoginViewState extends State<LoginView> {
                 final email = _email.text;
                 final password = _password.text;
                 try {
-                  await FirebaseAuth.instance.signInWithEmailAndPassword(
+                  await AuthService.firebase().logIn(
                     email: email,
                     password: password,
                   );
-                  final user = FirebaseAuth.instance.currentUser;
-                  if (user?.emailVerified ?? false) {
+                  final user = AuthService.firebase().currentUser;
+                  if (user?.isEmailVerified ?? false) {
                     if (context.mounted) {
                       Navigator.of(context).pushNamedAndRemoveUntil(
                           notesRoute, (route) => false);
@@ -73,28 +75,15 @@ class _LoginViewState extends State<LoginView> {
                           verifyEmailRoute, (route) => false);
                     }
                   }
-                  // devtools.log(userCredential.toString());
-                } on FirebaseAuthException catch (e) {
-                  if (e.code == "invalid-credential") {
-                    if (context.mounted) {
-                      await showErrorDialog(context,
-                          "your email or password something wrong!!! \n check your email or password ...");
-                    }
-                    devtools
-                        .log("your email or password something is wrong...");
-                  } else {
-                    await showErrorDialog(context, 'Error ${e.code}');
-                    devtools.log("your login success");
+                } on InvalidCredentialAuthException {
+                  if (context.mounted) {
+                    await showErrorDialog(context,
+                        "your email or password something wrong!!! \n check your email or password ...");
                   }
-                  // if (e.code == "invalid-credential") {
-                  //   devtools.log("user not found");
-                  // } else {
-                  //   devtools.log(e.code);
-                  //   devtools.log('something happen');
-                  //   devtools.log(e.code);
-                  // }
-                } catch (e) {
-                  await showErrorDialog(context, e.toString());
+                } on GenericAuthException {
+                  if (context.mounted) {
+                    await showErrorDialog(context, 'Authentication error');
+                  }
                 }
               },
               child: const Text("Kwi Login")),
